@@ -2,6 +2,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+from collections import OrderedDict
 import collections
 import torch
 import torch.nn as nn
@@ -18,9 +19,11 @@ def build_cnn(opt):
     # You had loaded the whole ResNet. 
     # Use the pretrained ResNet weights without pooling layer and fc layer as CNN model.
     # Hint: net = nn.Sequential(...)
+    #print(len(net._modules.items()[:-2]))
 
-   net = nn.Sequential(*list(net.features.children())[:-2])  #Remove the last two layers
-    
+    #net = nn.Sequential(*list(net.features.children())[:-2])  #Remove the last two layers
+    net = nn.Sequential(OrderedDict(list(net.modules.items()[:-2]))) #Remove the last two layers
+    print(net)
     #=============================================================================================#
     if vars(opt).get('start_from', None) is not None:
         net.load_state_dict(torch.load(os.path.join(opt.start_from, 'model-cnn.pth')))

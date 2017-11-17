@@ -393,13 +393,13 @@ class Attention(nn.Module):
 
         # e = W*tanh(att+att_h)
         e = att + att_h # batch * att_size * att_hid_size
-        e = F.tanh(dot) # batch * att_size * att_hid_size
-        e = dot.view(-1, self.att_hid_size) # (batch * att_size) * att_hid_size
-        e = self.alpha_net(dot) # (batch * att_size) * 1
-        e = dot.view(-1, att_size)  # batch * att_size
+        e = F.tanh(e) # batch * att_size * att_hid_size
+        e = e.view(-1, self.att_hid_size) # (batch * att_size) * att_hid_size
+        e = self.alpha_net(e) # (batch * att_size) * 1
+        e = e.view(-1, att_size)  # batch * att_size
 
         # alpha = softmax(e)
-        alpha = F.softmax(dot) # batch * att_size
+        alpha = F.softmax(e) # batch * att_size
              
         # a = resized image features(att_feats)
         a = att_feats.view(-1, att_size, self.rnn_size) # batch * att_size * att_feat_size
@@ -409,7 +409,7 @@ class Attention(nn.Module):
         
         
         #=============================================================================#
-        #return alpha, z
+        return alpha, z
 
 class AdaAttModel(AttModel):
     def __init__(self, opt):
