@@ -22,7 +22,7 @@ def parse_opt():
                     """)
 
     # Model settings
-    parser.add_argument('--caption_model', type=str, default="show_tell",
+    parser.add_argument('--caption_model', type=str, default="show_attend_tell",
                     help='show_tell, show_attend_tell, adaatt, topdown')
     parser.add_argument('--rnn_size', type=int, default=512,
                     help='size of the rnn in number of hidden nodes in each layer')

@@ -11,6 +11,16 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
+      <file leaf-file-name="opts.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/opts.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="-918">
+              <caret line="9" column="38" lean-forward="false" selection-start-line="9" selection-start-column="38" selection-end-line="9" selection-end-column="38" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
       <file leaf-file-name="AttModel.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/models/AttModel.py">
           <provider selected="true" editor-type-id="text-editor">
@@ -21,21 +31,21 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="CaptionModel.py" pinned="false" current-in-tab="true">
+      <file leaf-file-name="CaptionModel.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/models/CaptionModel.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="2223">
+            <state relative-caret-position="3543">
               <caret line="217" column="8" lean-forward="true" selection-start-line="217" selection-start-column="8" selection-end-line="217" selection-end-column="8" />
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="utils.py" pinned="false" current-in-tab="false">
+      <file leaf-file-name="utils.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/misc/utils.py">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="420">
-              <caret line="21" column="42" lean-forward="false" selection-start-line="21" selection-start-column="42" selection-end-line="21" selection-end-column="42" />
+              <caret line="21" column="41" lean-forward="true" selection-start-line="21" selection-start-column="41" selection-end-line="21" selection-end-column="41" />
               <folding>
                 <element signature="e#0#38#0" expanded="true" />
               </folding>
@@ -48,17 +58,17 @@
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
-        <option value="$PROJECT_DIR$/misc/utils.py" />
         <option value="$PROJECT_DIR$/models/AttModel.py" />
         <option value="$PROJECT_DIR$/models/CaptionModel.py" />
+        <option value="$PROJECT_DIR$/opts.py" />
+        <option value="$PROJECT_DIR$/misc/utils.py" />
       </list>
     </option>
   </component>
   <component name="ProjectFrameBounds">
-    <option name="x" value="1" />
-    <option name="y" value="33" />
-    <option name="width" value="798" />
-    <option name="height" value="816" />
+    <option name="y" value="29" />
+    <option name="width" value="1600" />
+    <option name="height" value="821" />
   </component>
   <component name="ProjectView">
     <navigator currentView="ProjectPane" proportions="" version="1">
@@ -135,10 +145,10 @@
     <servers />
   </component>
   <component name="ToolWindowManager">
-    <frame x="1" y="33" width="798" height="816" extended-state="0" />
+    <frame x="0" y="29" width="1600" height="821" extended-state="0" />
     <editor active="true" />
     <layout>
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.038770054" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.026451614" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
       <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
@@ -182,16 +192,6 @@
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/../../SampleCodes_OriAuthor/trunk/models/AttModel.py" />
-    <entry file="file://$PROJECT_DIR$/misc/utils.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="420">
-          <caret line="21" column="42" lean-forward="false" selection-start-line="21" selection-start-column="42" selection-end-line="21" selection-end-column="42" />
-          <folding>
-            <element signature="e#0#38#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/models/AttModel.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="654">
@@ -202,9 +202,27 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/models/CaptionModel.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="2223">
+        <state relative-caret-position="3543">
           <caret line="217" column="8" lean-forward="true" selection-start-line="217" selection-start-column="8" selection-end-line="217" selection-end-column="8" />
           <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/opts.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-918">
+          <caret line="9" column="38" lean-forward="false" selection-start-line="9" selection-start-column="38" selection-end-line="9" selection-end-column="38" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/misc/utils.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="420">
+          <caret line="21" column="41" lean-forward="true" selection-start-line="21" selection-start-column="41" selection-end-line="21" selection-end-column="41" />
+          <folding>
+            <element signature="e#0#38#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>

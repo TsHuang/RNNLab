@@ -19,10 +19,11 @@ def build_cnn(opt):
     # You had loaded the whole ResNet. 
     # Use the pretrained ResNet weights without pooling layer and fc layer as CNN model.
     # Hint: net = nn.Sequential(...)
-    #print(len(net._modules.items()[:-2]))
+    print(len(net._modules.items()[:-2]))
 
     #net = nn.Sequential(*list(net.features.children())[:-2])  #Remove the last two layers
-    net = nn.Sequential(OrderedDict(list(net.modules.items()[:-2]))) #Remove the last two layers
+    #net = nn.Sequential(OrderedDict(list(net.modules.items()[:-2]))) #Remove the last two layers
+    net = nn.Sequential(*list(net.modules())[:-2])  # Remove the last two layers
     print(net)
     #=============================================================================================#
     if vars(opt).get('start_from', None) is not None:
