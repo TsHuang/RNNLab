@@ -21,7 +21,8 @@ from dataloader import *
 import eval_utils
 import misc.utils as utils
 
-loss_file = open("loss.txt",'w')
+loss_file = open("loss.txt", 'w')
+
 
 def train(opt):
     opt.use_att = utils.if_use_att(opt.caption_model)
@@ -33,15 +34,16 @@ def train(opt):
     histories = {}
     if opt.start_from is not None:
         # open old infos and check if models are compatible
-        with open(os.path.join(opt.start_from, 'infos_'+opt.id+'.pkl')) as f:
+        with open(os.path.join(opt.start_from, 'infos_' + opt.id + '.pkl')) as f:
             infos = cPickle.load(f)
             saved_model_opt = infos['opt']
-            need_be_same=["caption_model", "rnn_type", "rnn_size", "num_layers"]
+            need_be_same = ["caption_model", "rnn_type", "rnn_size", "num_layers"]
             for checkme in need_be_same:
-                assert vars(saved_model_opt)[checkme] == vars(opt)[checkme], "Command line argument and saved model disagree on '%s' " % checkme
+                assert vars(saved_model_opt)[checkme] == vars(opt)[
+                    checkme], "Command line argument and saved model disagree on '%s' " % checkme
 
-        if os.path.isfile(os.path.join(opt.start_from, 'histories_'+opt.id+'.pkl')):
-            with open(os.path.join(opt.start_from, 'histories_'+opt.id+'.pkl')) as f:
+        if os.path.isfile(os.path.join(opt.start_from, 'histories_' + opt.id + '.pkl')):
+            with open(os.path.join(opt.start_from, 'histories_' + opt.id + '.pkl')) as f:
                 histories = cPickle.load(f)
 
     iteration = infos.get('iter', 0)
@@ -70,8 +72,8 @@ def train(opt):
     optimizer = optim.Adam(model.parameters(), lr=opt.learning_rate)
     if opt.finetune_cnn_after != -1 and epoch >= opt.finetune_cnn_after:
         # only finetune the layer2 to layer4
-        cnn_optimizer = optim.Adam([\
-            {'params': module.parameters()} for module in cnn_model._modules.values()[5:]\
+        cnn_optimizer = optim.Adam([ \
+            {'params': module.parameters()} for module in cnn_model._modules.values()[5:] \
             ], lr=opt.cnn_learning_rate, weight_decay=opt.cnn_weight_decay)
 
     # Load the optimizer
@@ -84,18 +86,18 @@ def train(opt):
 
     while True:
         if update_lr_flag:
-                # Assign the learning rate
+            # Assign the learning rate
             if epoch > opt.learning_rate_decay_start and opt.learning_rate_decay_start >= 0:
                 frac = (epoch - opt.learning_rate_decay_start) // opt.learning_rate_decay_every
-                decay_factor = opt.learning_rate_decay_rate  ** frac
+                decay_factor = opt.learning_rate_decay_rate ** frac
                 opt.current_lr = opt.learning_rate * decay_factor
-                utils.set_lr(optimizer, opt.current_lr) # set the decayed rate
+                utils.set_lr(optimizer, opt.current_lr)  # set the decayed rate
             else:
                 opt.current_lr = opt.learning_rate
             # Assign the scheduled sampling prob
             if epoch > opt.scheduled_sampling_start and opt.scheduled_sampling_start >= 0:
                 frac = (epoch - opt.scheduled_sampling_start) // opt.scheduled_sampling_increase_every
-                opt.ss_prob = min(opt.scheduled_sampling_increase_prob  * frac, opt.scheduled_sampling_max_prob)
+                opt.ss_prob = min(opt.scheduled_sampling_increase_prob * frac, opt.scheduled_sampling_max_prob)
                 model.ss_prob = opt.ss_prob
             # Update the training stage of cnn
             if opt.finetune_cnn_after == -1 or epoch < opt.finetune_cnn_after:
@@ -127,32 +129,37 @@ def train(opt):
         tmp = [Variable(torch.from_numpy(_), requires_grad=False).cuda() for _ in tmp]
         images, labels, masks = tmp
 
-        att_feats = cnn_model(images).permute(0, 2, 3, 1)   # output of ResNet (image fearures)
-        fc_feats = att_feats.mean(2).mean(1)                # mean-pooled image fearures
+        att_feats = cnn_model(images).permute(0, 2, 3, 1)  # output of ResNet (image fearures)
+        fc_feats = att_feats.mean(2).mean(1)  # mean-pooled image fearures
 
         if not opt.use_att:
-            att_feats = Variable(torch.FloatTensor(1,1,1,1).cuda())
+            att_feats = Variable(torch.FloatTensor(1, 1, 1, 1).cuda())
 
-        att_feats = att_feats.unsqueeze(1).expand(*((att_feats.size(0), opt.seq_per_img,) + att_feats.size()[1:])).contiguous().view(*((att_feats.size(0) * opt.seq_per_img,) + att_feats.size()[1:]))
-        fc_feats = fc_feats.unsqueeze(1).expand(*((fc_feats.size(0), opt.seq_per_img,) + fc_feats.size()[1:])).contiguous().view(*((fc_feats.size(0) * opt.seq_per_img,) + fc_feats.size()[1:]))
-        
+        att_feats = att_feats.unsqueeze(1).expand(
+            *((att_feats.size(0), opt.seq_per_img,) + att_feats.size()[1:])).contiguous().view(
+            *((att_feats.size(0) * opt.seq_per_img,) + att_feats.size()[1:]))
+        fc_feats = fc_feats.unsqueeze(1).expand(
+            *((fc_feats.size(0), opt.seq_per_img,) + fc_feats.size()[1:])).contiguous().view(
+            *((fc_feats.size(0) * opt.seq_per_img,) + fc_feats.size()[1:]))
+
         optimizer.zero_grad()
         if opt.finetune_cnn_after != -1 and epoch >= opt.finetune_cnn_after:
             cnn_optimizer.zero_grad()
         alpha, model_output = model(fc_feats, att_feats, labels)
-        loss = crit(model_output, labels[:,1:], masks[:,1:])
+        loss = crit(model_output, labels[:, 1:], masks[:, 1:])
         loss.backward()
-        utils.clip_gradient(optimizer, opt.grad_clip)
+        # utils.clip_gradient(optimizer, opt.grad_clip)
+        torch.nn.utils.clip_grad_norm(model.parameters(), opt.grad_clip)
         optimizer.step()
         if opt.finetune_cnn_after != -1 and epoch >= opt.finetune_cnn_after:
-            utils.clip_gradient(cnn_optimizer, opt.grad_clip)
+            # utils.clip_gradient(cnn_optimizer, opt.grad_clip)
+            torch.nn.utils.clip_grad_norm(model.parameters(), opt.grad_clip)
             cnn_optimizer.step()
         train_loss = loss.data[0]
         torch.cuda.synchronize()
         end = time.time()
         print("iter {} (epoch {}), train_loss = {:.3f}, time/batch = {:.3f}" \
-            .format(iteration, epoch, train_loss, end - start))
-       
+              .format(iteration, epoch, train_loss, end - start))
 
         # Update the iteration and epoch
         iteration += 1
@@ -162,7 +169,6 @@ def train(opt):
 
         # Write the training loss summary
         if (iteration % opt.losses_log_every == 0):
-
             loss_history[iteration] = train_loss
             lr_history[iteration] = opt.current_lr
             ss_prob_history[iteration] = model.ss_prob
@@ -171,7 +177,7 @@ def train(opt):
         if (iteration % opt.save_checkpoint_every == 0):
             # eval model
             eval_kwargs = {'split': 'val',
-                            'dataset': opt.input_json}
+                           'dataset': opt.input_json}
             eval_kwargs.update(vars(opt))
             val_loss, predictions, lang_stats = eval_utils.eval_split(cnn_model, model, crit, loader, eval_kwargs)
 
@@ -185,7 +191,7 @@ def train(opt):
                 current_score = - val_loss
 
             best_flag = False
-            if True: # if true
+            if True:  # if true
                 if best_val_score is None or current_score > best_val_score:
                     best_val_score = current_score
                     best_flag = True
@@ -213,9 +219,9 @@ def train(opt):
                 histories['loss_history'] = loss_history
                 histories['lr_history'] = lr_history
                 histories['ss_prob_history'] = ss_prob_history
-                with open(os.path.join(opt.checkpoint_path, 'infos_'+opt.id+'.pkl'), 'wb') as f:
+                with open(os.path.join(opt.checkpoint_path, 'infos_' + opt.id + '.pkl'), 'wb') as f:
                     cPickle.dump(infos, f)
-                with open(os.path.join(opt.checkpoint_path, 'histories_'+opt.id+'.pkl'), 'wb') as f:
+                with open(os.path.join(opt.checkpoint_path, 'histories_' + opt.id + '.pkl'), 'wb') as f:
                     cPickle.dump(histories, f)
 
                 if best_flag:
@@ -225,12 +231,14 @@ def train(opt):
                     torch.save(cnn_model.state_dict(), cnn_checkpoint_path)
                     print("model saved to {}".format(checkpoint_path))
                     print("cnn model saved to {}".format(cnn_checkpoint_path))
-                    with open(os.path.join(opt.checkpoint_path, 'infos_'+opt.id+'-best.pkl'), 'wb') as f:
+                    with open(os.path.join(opt.checkpoint_path, 'infos_' + opt.id + '-best.pkl'), 'wb') as f:
                         cPickle.dump(infos, f)
 
         # Stop if reaching max epochs
         if epoch >= opt.max_epochs and opt.max_epochs != -1:
             break
+
+
 opt = opts.parse_opt()
 train(opt)
 loss_file.close
