@@ -153,7 +153,8 @@ class ShowAttendTellCore(nn.Module):
         #           dropout: self.drop_prob_lm
         # http://pytorch.org/docs/master/nn.html#lstm
 
-        
+        self.rnn = getattr(nn, self.rnn_type.upper())(self.input_encoding_size + self.att_feat_size, self.rnn_size, self.num_layers, bias=False, dropout=self.drop_prob_lm)
+
         
 		#=============================================================================#
         
@@ -173,30 +174,37 @@ class ShowAttendTellCore(nn.Module):
         #       expand_as(Tensor)           expands tensor to the size of the specified tensor   
         #       torch.bmm()                 batch matrix-matrix product
         # http://pytorch.org/docs/master/torch.html?
-        
+
+
         # V = resized image features(att_feats)
-                # (batch * att_size) * att_feat_size
+        att = att_feats.view(-1, self.att_feat_size)# (batch * att_size) * att_feat_size
+
+        #if self.att_hid_size > 0: # Size of hidden layer > 1 in this practice
         # att = W*V
-                # (batch * att_size) * att_hid_size
-                # batch * att_size * att_hid_size
+        att = self.ctx2att(att) # (batch * att_size) * att_hid_size
+        att = att.view(-1, att_size, self.att_hid_size) # batch * att_size * att_hid_size
+
         # att_h = W*hidden
-                # batch * att_hid_size
-                # batch * att_size * att_hid_size
+        att_h = self.h2att(state[0][-1]) # batch * att_hid_size
+        att_h = att_h.unsqueeze(1).expand_as(att) # batch * att_size * att_hid_size
+
         # e = W*tanh(att+att_h)
-                # batch * att_size * att_hid_size
-                # batch * att_size * att_hid_size
-                # (batch * att_size) * att_hid_size
-                # (batch * att_size) * 1
-                # batch * att_size
+
+        e = att + att_h # batch * att_size * att_hid_size
+        e = F.tanh(dot)  # batch * att_size * att_hid_size
+        e = dot.view(-1, self.att_hid_size) # (batch * att_size) * att_hid_size
+        e = self.alpha_net(dot) #(batch * att_size) * 1
+        e =dot.view(-1, att_size) # batch * att_size
+
         # alpha = softmax(e)
-                # batch * att_size
-             
+        alpha = F.softmax(e) # batch * att_size
+
         # V = resized image features(att_feats)
-                # batch * att_size * att_feat_size
+        V = att_feats.view(-1, att_size, self.att_feat_size)  # batch * att_size * att_feat_size
+
         # C = alpha*V
-                # batch * att_feat_size
-                
-        
+        C = torch.bmm(weight.unsqueeze(1), att_feats_).squeeze(1) # batch * att_feat_size
+
         #=============================================================================#
         
         #======  TODO  =================================================================#
@@ -205,7 +213,7 @@ class ShowAttendTellCore(nn.Module):
         # output, state = self.rnn(input, state)
         #       input: Concatenates(xt, C) in size=(1 * batch_size * input_size)
         
-        
+        output, state = self.rnn(torch.cat[xt, C], 1).unsqueeze(0), state)
         #=============================================================================#
         
         

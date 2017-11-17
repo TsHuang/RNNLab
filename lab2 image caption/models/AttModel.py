@@ -270,11 +270,36 @@ class AdaAtt_attention(nn.Module):
         conv_feat = conv_feat.view(-1, att_size, self.rnn_size)
         conv_feat_embed = conv_feat_embed.view(-1, att_size, self.att_hid_size)
         #======  bonus  =================================================================#
+        # view neighbor from bach_size * neighbor_num x rnn_size to bach_size x rnn_size * neighbor_num
+        fake_region = self.fr_linear(fake_region)
+        fake_region_embed = self.fr_embed(fake_region)
 
+        h_out_linear = self.ho_linear(h_out)
+        h_out_embed = self.ho_embed(h_out_linear)
+
+        txt_replicate = h_out_embed.unsqueeze(1).expand(h_out_embed.size(0), att_size + 1, h_out_embed.size(1))
+
+        img_all = torch.cat([fake_region.view(-1, 1, self.input_encoding_size), conv_feat], 1)
+        img_all_embed = torch.cat([fake_region_embed.view(-1, 1, self.input_encoding_size), conv_feat_embed], 1)
+
+        hA = F.tanh(img_all_embed + txt_replicate)
+        hA = F.dropout(hA, self.drop_prob_lm, self.training)
+
+        hAflat = self.alpha_net(hA.view(-1, self.att_hid_size))
+        PI = F.softmax(hAflat.view(-1, att_size + 1))
+
+        visAtt = torch.bmm(PI.unsqueeze(1), img_all)
+        visAttdim = visAtt.squeeze(1)
+
+        atten_out = visAttdim + h_out_linear
+
+        h = F.tanh(self.att2h(atten_out))
+        h = F.dropout(h, self.drop_prob_lm, self.training)
+        return h
     
         #=============================================================================# 
         
-        return alpha, h
+        #return alpha, h # need to figure out what alpha is later
 
 class AdaAttCore(nn.Module):
     def __init__(self, opt, use_maxout=False):
@@ -301,8 +326,8 @@ class TopDownCore(nn.Module):
         #           hidden size: rnn_size
         # http://pytorch.org/docs/master/nn.html?#lstmcell
         
-        
-        
+        self.att_lstm = nn.LSTMCell(opt.input_encoding_size + opt.rnn_szie * 2, opt.rnn_size) #se, fc, h^2_t-1
+        self.lang_lstm = nn.LSTMCell(opt.rnn_size * 2, opt.rnn_size)  #h^1_t, \hat v
         #=============================================================================#      
         self.attention = Attention(opt)
 
@@ -315,20 +340,23 @@ class TopDownCore(nn.Module):
         
         ## TopDown Attention LSTM
         # h_att, c_att = self.att_lstm(input, state)
-        #       state: (h_att, c_att)
-        #       prev_h: hidden in Language LSTM of last time step
-        
-        ## Attention 
+        prev_h = state[0][-1] # state: (h_att, c_att)
+        att_lstm_input = torch.cat([prev_h, fc_feats, xt], 1) #       prev_h: hidden in Language LSTM of last time step
+        h_att, c_att = self.att_lstm(att_lstm_input, (state[0][0], state[1][0]))
+
+        ## Attention
         # alpha, att = self.attention(h, att_feats, p_att_feats)
-        
+        alpha, att = self.attention(h_att, att_feats, p_att_feats)
+
         ## Language LSTM
         # h_lang, c_lang = self.lang_lstm(input, state)
+        lang_lstm_input = torch.cat([att, h_att], 1)
         #       state: (h_lang, c_lang)
-        
+        h_lang, c_lang = self.lang_lstm(lang_lstm_input, (state[0][1], state[1][1]))
+
         ## update state
-        
-        
-        
+        state = (torch.stack([h_att, h_lang]), torch.stack([c_att, c_lang]))
+
         #=============================================================================#
 
         output = F.dropout(h_lang, self.drop_prob_lm, self.training)
@@ -357,24 +385,26 @@ class Attention(nn.Module):
         # http://pytorch.org/docs/master/torch.html?
         
         # att = resized projected image features(p_att_feats)
-                # batch * att_size * att_hid_size
+        att = p_att_feats.view(-1, att_size, self.att_hid_size) # batch * att_size * att_hid_size
         
         # att_h = W*hidden
-                # batch * att_hid_size
-                # batch * att_size * att_hid_size
+        att_h = self.h2att(h) # batch * att_hid_size
+        att_h = att_h.unsqueeze(1).expand_as(att)  # batch * att_size * att_hid_size
+
         # e = W*tanh(att+att_h)
-                # batch * att_size * att_hid_size
-                # batch * att_size * att_hid_size
-                # (batch * att_size) * att_hid_size
-                # (batch * att_size) * 1
-                # batch * att_size
+        e = att + att_h # batch * att_size * att_hid_size
+        e = F.tanh(dot) # batch * att_size * att_hid_size
+        e = dot.view(-1, self.att_hid_size) # (batch * att_size) * att_hid_size
+        e = self.alpha_net(dot) # (batch * att_size) * 1
+        e = dot.view(-1, att_size)  # batch * att_size
+
         # alpha = softmax(e)
-                # batch * att_size
+        alpha = F.softmax(dot) # batch * att_size
              
         # a = resized image features(att_feats)
-                # batch * att_size * att_feat_size
+        a = att_feats.view(-1, att_size, self.rnn_size) # batch * att_size * att_feat_size
         # z = alpha*att_feats
-                # batch * att_feat_size
+        z = torch.bmm(alpha.unsqueeze(1), a).squeeze(1) # batch * att_feat_size
                 
         
         
