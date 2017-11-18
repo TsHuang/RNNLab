@@ -286,20 +286,20 @@ class AdaAtt_attention(nn.Module):
         hA = F.dropout(hA, self.drop_prob_lm, self.training)
 
         hAflat = self.alpha_net(hA.view(-1, self.att_hid_size))
-        PI = F.softmax(hAflat.view(-1, att_size + 1))
+        alpha = F.softmax(hAflat.view(-1, att_size + 1))
 
-        visAtt = torch.bmm(PI.unsqueeze(1), img_all)
+        visAtt = torch.bmm(alpha.unsqueeze(1), img_all)
         visAttdim = visAtt.squeeze(1)
 
         atten_out = visAttdim + h_out_linear
 
         h = F.tanh(self.att2h(atten_out))
         h = F.dropout(h, self.drop_prob_lm, self.training)
-        return h
+        #return h
     
         #=============================================================================# 
         
-        #return alpha, h # need to figure out what alpha is later
+        return alpha, h # need to figure out what alpha is later
 
 class AdaAttCore(nn.Module):
     def __init__(self, opt, use_maxout=False):
