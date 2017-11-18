@@ -326,7 +326,7 @@ class TopDownCore(nn.Module):
         #           hidden size: rnn_size
         # http://pytorch.org/docs/master/nn.html?#lstmcell
         
-        self.att_lstm = nn.LSTMCell(opt.input_encoding_size + opt.rnn_szie * 2, opt.rnn_size) #se, fc, h^2_t-1
+        self.att_lstm = nn.LSTMCell(opt.input_encoding_size + opt.rnn_size * 2, opt.rnn_size) #se, fc, h^2_t-1
         self.lang_lstm = nn.LSTMCell(opt.rnn_size * 2, opt.rnn_size)  #h^1_t, \hat v
         #=============================================================================#      
         self.attention = Attention(opt)
